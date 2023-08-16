@@ -1,3 +1,5 @@
+from config import *
+
 def dice_coef_metric(probabilities: torch.Tensor,
                      truth: torch.Tensor,
                      treshold: float = 0.5,

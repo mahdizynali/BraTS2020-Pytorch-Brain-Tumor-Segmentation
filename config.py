@@ -56,6 +56,9 @@ class configuration:
     pretrained_model_path = None # '/home/maximum/Desktop/tf2/torch/pre/best_model.pth'
     train_logs_path = None #'/home/maximum/Desktop/tf2/torch/pre/train_log.csv'
     seed = 55
+    batch_size = 1
+    learnin_rate = 0.001
+    num_workers = 4
     
 def random_seed(seed: int):
     '''set random seed for initializing'''

@@ -8,7 +8,7 @@ class extractPath:
     # make dataFrame of pandas in order to list datasets
 
     def __init__(self) -> None:
-
+        print("Extracting dataset path done !!\n")
         self.survival_info = pd.read_csv(config.train_path + '/survival_info.csv')
         self.name_mapping = pd.read_csv(config.train_path + '/name_mapping.csv')
         self.name_mapping.rename({'BraTS_2020_subject_ID': 'Brats20ID'}, axis=1, inplace=True) # rename to the patients dataSet
@@ -26,13 +26,14 @@ class extractPath:
                 path = os.path.join(config.test_path, patient_id)
             self.data_paths.append(path)
             
-        df['path'] = self.data_paths # append patients dataSet path into pandas dataFrame
+        df['path'] = self.data_paths
 
         self.train_data = df.loc[df['Age'].notnull()].reset_index(drop=True)
         self.train_data = self.train_data.loc[self.train_data['Brats20ID'] != 'BraTS20_Training_355'].reset_index(drop=True, ) # remove patinet 355 because it's results are false
-        self.train_data.to_csv(config.train_csv_path, index=False) # save data train structure
+         # save data train structure
 
     def train_test_valid(self):
+        print("Spliting data path into train test valid done !!\n")
         # Kfold = StratifiedKFold(n_splits=7, random_state=config.seed, shuffle=True) 
         # for i, (train_index, val_index) in enumerate(Kfold.split(self.train_data, self.train_data["Age"]//10*10)):
         #         self.train_data.loc[val_index, "fold"] = i
@@ -56,8 +57,8 @@ class extractPath:
         # Extract 80% training data
         train_indices = self.train_data[(self.train_data['fold'] != 9) & (self.train_data['fold'] != 0)].index
         train_df = self.train_data.loc[train_indices].reset_index(drop=True)    
-        
-        print(type(train_df))
+        self.train_data.to_csv(config.train_csv_path, index=False)
+
         return train_df, val_df, test_df
     
     def plotResult(self, train_df, val_df, test_df):
@@ -72,6 +73,7 @@ class extractPath:
 
 class generator(Dataset):
     def __init__(self, df: pd.DataFrame, phase: str="test"):
+        print("Generating and Set augmentation on data done !!\n")
         self.df = df # calea
         self.phase = phase
         self.data_types = ['_flair.nii', '_t1.nii', '_t1ce.nii', '_t2.nii'] 
