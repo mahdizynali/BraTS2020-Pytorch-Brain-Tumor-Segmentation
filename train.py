@@ -1,5 +1,9 @@
 from config import *
-from dataGenerator import extactPath, generator
+from dataGenerator import extractPath, generator
+
+data = extractPath()
+train_df, val_df, test_df = data.train_test_valid()
+# data.plotResult(train_df, val_df, test_df)
 
 def get_dataloader(
     dataset: torch.utils.data.Dataset,

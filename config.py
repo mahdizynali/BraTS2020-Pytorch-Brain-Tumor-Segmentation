@@ -50,8 +50,8 @@ class configuration:
     '''in this case we devide trainingData into valid set and train set and test set,
      also the ValidationData considers as test set for model evaluation'''
 
-    train_path = '/home/maximum/Desktop/tf2/dataSet/MICCAI_BraTS2020_TrainingData'
-    valid_path = '/home/maximum/Desktop/tf2/dataSet/MICCAI_BraTS2020_ValidationData'
+    train_path = '/media/mahdi/individual/dataset/MICCAI_BraTS2020_TrainingData'
+    test_path = '/media/mahdi/individual/dataset/MICCAI_BraTS2020_ValidationData'
     train_csv_path = 'trainResult/train_data.csv'
     pretrained_model_path = None # '/home/maximum/Desktop/tf2/torch/pre/best_model.pth'
     train_logs_path = None #'/home/maximum/Desktop/tf2/torch/pre/train_log.csv'

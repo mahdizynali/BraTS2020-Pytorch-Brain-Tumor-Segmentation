@@ -4,34 +4,33 @@ config = configuration()
 random_seed(config.seed)
 
 
-class extactPath:
+class extractPath:
     # make dataFrame of pandas in order to list datasets
 
     def __init__(self) -> None:
 
         self.survival_info = pd.read_csv(config.train_path + '/survival_info.csv')
         self.name_mapping = pd.read_csv(config.train_path + '/name_mapping.csv')
-        name_mapping.rename({'BraTS_2020_subject_ID': 'Brats20ID'}, axis=1, inplace=True) # rename to the patients dataSet
-        df = survival_info.merge(name_mapping, on="Brats20ID", how="right") # add mapping names into survival info
+        self.name_mapping.rename({'BraTS_2020_subject_ID': 'Brats20ID'}, axis=1, inplace=True) # rename to the patients dataSet
+        df = self.survival_info.merge(self.name_mapping, on="Brats20ID", how="right") # add mapping names into survival info
         # print(df.head(10))
 
         self.data_paths = list()
-        for index, row  in df.iterrows(self):
+        for index, row  in df.iterrows():
             patient_id = row['Brats20ID']
             phase = patient_id.split("_")[-2]
             
             if phase == 'Training':
                 path = os.path.join(config.train_path, patient_id)
             else:
-                path = os.path.join(config.valid_path, patient_id)
+                path = os.path.join(config.test_path, patient_id)
             self.data_paths.append(path)
             
         df['path'] = self.data_paths # append patients dataSet path into pandas dataFrame
 
         self.train_data = df.loc[df['Age'].notnull()].reset_index(drop=True)
-        self.train_data = train_data.loc[train_data['Brats20ID'] != 'BraTS20_Training_355'].reset_index(drop=True, ) # remove patinet 355 because it's results are false
+        self.train_data = self.train_data.loc[self.train_data['Brats20ID'] != 'BraTS20_Training_355'].reset_index(drop=True, ) # remove patinet 355 because it's results are false
         self.train_data.to_csv(config.train_csv_path, index=False) # save data train structure
-        self.train_test_valid()
 
     def train_test_valid(self):
         # Kfold = StratifiedKFold(n_splits=7, random_state=config.seed, shuffle=True) 
@@ -43,7 +42,7 @@ class extactPath:
         # test_df = df.loc[~df['Age'].notnull()].reset_index(drop=True)
         
         Kfold = StratifiedKFold(n_splits=10, random_state=config.seed, shuffle=True)
-        for i, (train_index, val_index) in enumerate(Kfold.split(self.train_data, data["Age"] // 10 * 10)):
+        for i, (train_index, val_index) in enumerate(Kfold.split(self.train_data, self.train_data["Age"] // 10 * 10)):
             self.train_data.loc[val_index, "fold"] = i
 
         # Extract 10% test data
@@ -58,9 +57,10 @@ class extactPath:
         train_indices = self.train_data[(self.train_data['fold'] != 9) & (self.train_data['fold'] != 0)].index
         train_df = self.train_data.loc[train_indices].reset_index(drop=True)    
         
+        print(type(train_df))
         return train_df, val_df, test_df
     
-    def plotResult(self):
+    def plotResult(self, train_df, val_df, test_df):
         dataframes = ['train_df', 'val_df', 'test_df']
         shapes = [train_df.shape[0], val_df.shape[0], test_df.shape[0]]
         plt.bar(dataframes, shapes, color=['blue', 'green', 'orange'])
