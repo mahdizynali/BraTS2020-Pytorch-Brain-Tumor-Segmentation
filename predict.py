@@ -3,10 +3,10 @@ from dataGenerator import generator
 from model import *
 from coefficent import *
 from train import Trainer, data_loader
-from model import Modified3DUNet
+from model import bestUnet
 from plotter import plot
 
-model = Modified3DUNet()
+model = bestUnet()
 sum([param.nelement() for param in model.parameters()])
 
 pred = Trainer(net=model,

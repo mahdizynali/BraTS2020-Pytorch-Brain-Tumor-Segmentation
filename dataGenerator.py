@@ -188,5 +188,4 @@ class generator(Dataset):
 
         mask = np.stack([mask_WT, mask_TC, mask_ET])
         mask = np.moveaxis(mask, (0, 1, 2, 3), (0, 3, 2, 1)) # mutam axele pentru a putea vizualiza mastile ulterior
-
         return mask

@@ -53,11 +53,13 @@ class configuration:
     train_path = '/media/mahdi/individual/dataset/MICCAI_BraTS2020_TrainingData'
     test_path = '/media/mahdi/individual/dataset/MICCAI_BraTS2020_ValidationData'
     train_csv_path = 'trainResult/train_data.csv'
+    dice_per_class_path = 'trainResult/dice_per_class.csv'
+    iou_per_class_path = 'trainResult/iou_per_class.csv'
     pretrained_model_path = "/home/mahdi/Desktop/BraTS2020-Pytorch-Brain-Tumor-Segmentation/pre/best_model.pth"
     train_logs_path = "/home/mahdi/Desktop/BraTS2020-Pytorch-Brain-Tumor-Segmentation/pre/train_log.csv"
     seed = 55
     batch_size = 4
-    epochs = 5
+    epochs = 2
     learnin_rate = 5e-4
     num_workers = 4
     acc_steps = 4

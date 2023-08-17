@@ -42,9 +42,15 @@ class Trainer:
         self.accumulation_steps = accumulation_steps // batch_size
         self.phases = ["train", "valid"]
         self.num_epochs = num_epochs
-        self.hist_class_dice = []
-        self.hist_class_iou = []
-
+        self.hist_train_dice = []
+        self.hist_train_iou = []
+        self.train_list_dice = []
+        self.train_list_iou = []
+        self.hist_val_dice = []
+        self.hist_val_iou = []
+        self.val_list_dice = []
+        self.val_list_iou = []
+        
         self.dataloaders = {
             phase: data_loader(
                 dataset = dataset,
@@ -71,7 +77,7 @@ class Trainer:
         loss = self.criterion(logits, targets)
         return loss, logits
     
-    def final_train_valid_per_class(self, data):
+    def mean_per_class(self, data):
         mean_dict = {}
         for data_dict in data:
             for key, value in data_dict.items():
@@ -85,6 +91,42 @@ class Trainer:
             mean_dict[key] /= num_dicts
 
         return mean_dict
+    
+    def save_per_class_logs(self):
+
+        columns1 = ['WT-dice-train', 'TC-dice-train', 'ET-dice-train',
+                    'WT-dice-val', 'TC-dice-val', 'ET-dice-val']
+        columns2 = ['WT-IoU-train', 'TC-IoU-train', 'ET-IoU-train',
+                    'WT-IoU-val', 'TC-IoU-val', 'ET-IoU-val']
+
+        base1 = {'WT-dice-train': [0], 'TC-dice-train': [0], 'ET-dice-train': [0],
+                 'WT-dice-val': [0], 'TC-dice-val': [0], 'ET-dice-val': [0]}
+        for i, item in enumerate(self.train_list_dice):
+            base1["WT-dice-train"].append(item["WT"])
+            base1["TC-dice-train"].append(item["TC"])
+            base1["ET-dice-train"].append(item["ET"])
+        for i, item in enumerate(self.val_list_dice):
+            base1["WT-dice-val"].append(item["WT"])
+            base1["TC-dice-val"].append(item["TC"])
+            base1["ET-dice-val"].append(item["ET"])
+
+        df1 = pd.DataFrame(base1, columns=columns1)
+        csv_path = configuration.dice_per_class_path
+        df1.to_csv(csv_path, index=False)
+
+        base2 = {'WT-IoU-train': [0], 'TC-IoU-train': [0], 'ET-IoU-train': [0],
+                 'WT-IoU-val': [0], 'TC-IoU-val': [0], 'ET-IoU-val': [0]}
+        for i, item in enumerate(self.train_list_iou):
+            base2["WT-IoU-train"].append(item["WT"])
+            base2["TC-IoU-train"].append(item["TC"])
+            base2["ET-IoU-train"].append(item["ET"])
+        for i, item in enumerate(self.val_list_iou):
+            base2["WT-IoU-val"].append(item["WT"])
+            base2["TC-IoU-val"].append(item["TC"])
+            base2["ET-IoU-val"].append(item["ET"])
+        df2 = pd.DataFrame(base2, columns=columns2)
+        csv_path = configuration.iou_per_class_path
+        df2.to_csv(csv_path, index=False)
 
     def do_epoch(self, epoch: int, phase: str):
         print("#"*50)
@@ -98,10 +140,14 @@ class Trainer:
         running_loss = 0.0
         self.optimizer.zero_grad()
 
-        for itr, data_batch in tqdm(enumerate(dataloader), total=len(dataloader), desc="Steps"):   
+        for itr, data_batch in tqdm(enumerate(dataloader), total=total_batches, desc="Steps"):   
             dice_per_classes, iou_per_classes = compute_scores_per_classes_batch(self.net, data_batch, ['WT', 'TC', 'ET']) 
-            self.hist_class_dice.append(dice_per_classes)
-            self.hist_class_iou.append(iou_per_classes)
+            if phase == "train" :
+                self.hist_train_dice.append(dice_per_classes)
+                self.hist_train_iou.append(iou_per_classes)
+            else :
+                self.hist_val_dice.append(dice_per_classes)
+                self.hist_val_iou.append(iou_per_classes)                
             images, targets = data_batch['image'], data_batch['mask']
             loss, logits = self.compute_loss_and_outputs(images, targets)
             loss = loss / self.accumulation_steps
@@ -116,8 +162,18 @@ class Trainer:
         epoch_loss = (running_loss * self.accumulation_steps) / total_batches
         epoch_dice, epoch_iou, epoch_sen, epoch_spf  = meter.get_metrics()
         elapsed_time = time.process_time() - t
-        mean_dice_per_class = self.final_train_valid_per_class(self.hist_class_dice)
-        mean_iou_per_class = self.final_train_valid_per_class(self.hist_class_iou)
+        
+        
+        if phase == "train" :
+            mean_dice_per_class = self.mean_per_class(self.hist_train_dice)
+            mean_iou_per_class = self.mean_per_class(self.hist_train_iou)
+            self.train_list_dice.append(mean_dice_per_class)
+            self.train_list_iou.append(mean_iou_per_class)
+        else :
+            mean_dice_per_class = self.mean_per_class(self.hist_val_dice)
+            mean_iou_per_class = self.mean_per_class(self.hist_val_iou)
+            self.val_list_dice.append(mean_dice_per_class)
+            self.val_list_iou.append(mean_iou_per_class)            
 
         print(f"loss : {epoch_loss} \ndice : {epoch_dice}\nIoU : {epoch_iou}")
         print(f"epoch time : {elapsed_time:.2f} sec")       
@@ -171,16 +227,16 @@ class Trainer:
                 print(f"\nSaved new best checkpoint epoch {epoch + 1}\n{'#'*50}\n")
                 self.best_loss = val_loss
                 torch.save(self.net.state_dict(), "trainResult/best_model.pth")
-            print()
+
         self.save_train_history()
+        self.save_per_class_logs()
             
     def load_predtrain_model(self, state_path: str):
         self.net.load_state_dict(torch.load(state_path))
         print("Predtrained model loaded\n")
         
     def save_train_history(self):
-        torch.save(self.net.state_dict(),
-                   f"trainResult/last_epoch_model.pth")
+        torch.save(self.net.state_dict(),f"trainResult/last_epoch_model.pth")
 
         logs_ = [self.losses, self.dice_scores, self.jaccard_scores]
         log_names_ = ["_loss", "_dice", "_jaccard"]
@@ -194,7 +250,7 @@ class Trainer:
             dict(zip(log_names, logs))).to_csv("trainResult/train_log.csv", index=False)
         
 def run() :
-    nodel=Modified3DUNet()
+    nodel=bestUnet()
     sum([param.nelement() for param in nodel.parameters()])
     trainer = Trainer(net=nodel,
                     fold=0,
