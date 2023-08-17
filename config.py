@@ -50,17 +50,18 @@ class configuration:
     '''in this case we devide trainingData into valid set and train set and test set,
      also the ValidationData considers as test data after training'''
 
-    train_path = '/home/maximum/Desktop/tf2/dataSet/MICCAI_BraTS2020_TrainingData'
-    test_path = '/home/maximum/Desktop/tf2/dataSet/MICCAI_BraTS2020_ValidationData'
+    train_path = '/media/mahdi/individual/dataset/MICCAI_BraTS2020_TrainingData'
+    test_path = '/media/mahdi/individual/dataset/MICCAI_BraTS2020_ValidationData'
     train_csv_path = 'trainResult/train_data.csv'
-    pretrained_model_path = None # '/home/maximum/Desktop/tf2/torch/pre/best_model.pth'
-    train_logs_path = None #'/home/maximum/Desktop/tf2/torch/pre/train_log.csv'
+    pretrained_model_path = "/home/mahdi/Desktop/BraTS2020-Pytorch-Brain-Tumor-Segmentation/pre/best_model.pth"
+    train_logs_path = "/home/mahdi/Desktop/BraTS2020-Pytorch-Brain-Tumor-Segmentation/pre/train_log.csv"
     seed = 55
-    batch_size = 3
-    epochs = 30
+    batch_size = 4
+    epochs = 5
     learnin_rate = 5e-4
     num_workers = 4
     acc_steps = 4
+    
     
 def random_seed(seed: int):
     '''set random seed for initializing'''

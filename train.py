@@ -42,6 +42,8 @@ class Trainer:
         self.accumulation_steps = accumulation_steps // batch_size
         self.phases = ["train", "valid"]
         self.num_epochs = num_epochs
+        self.hist_class_dice = []
+        self.hist_class_iou = []
 
         self.dataloaders = {
             phase: data_loader(
@@ -68,6 +70,21 @@ class Trainer:
         logits = self.net(images)
         loss = self.criterion(logits, targets)
         return loss, logits
+    
+    def final_train_valid_per_class(self, data):
+        mean_dict = {}
+        for data_dict in data:
+            for key, value in data_dict.items():
+                if key not in mean_dict:
+                    mean_dict[key] = value[0]
+                else:
+                    mean_dict[key] += value[0]
+               
+        num_dicts = len(data)
+        for key in mean_dict.keys():
+            mean_dict[key] /= num_dicts
+
+        return mean_dict
 
     def do_epoch(self, epoch: int, phase: str):
         print("#"*50)
@@ -80,11 +97,11 @@ class Trainer:
         total_batches = len(dataloader)
         running_loss = 0.0
         self.optimizer.zero_grad()
-        counter = 0
-        
+
         for itr, data_batch in tqdm(enumerate(dataloader), total=len(dataloader), desc="Steps"):   
             dice_per_classes, iou_per_classes = compute_scores_per_classes_batch(self.net, data_batch, ['WT', 'TC', 'ET']) 
-            print(dice_per_classes,"\n", iou_per_classes)
+            self.hist_class_dice.append(dice_per_classes)
+            self.hist_class_iou.append(iou_per_classes)
             images, targets = data_batch['image'], data_batch['mask']
             loss, logits = self.compute_loss_and_outputs(images, targets)
             loss = loss / self.accumulation_steps
@@ -99,9 +116,13 @@ class Trainer:
         epoch_loss = (running_loss * self.accumulation_steps) / total_batches
         epoch_dice, epoch_iou, epoch_sen, epoch_spf  = meter.get_metrics()
         elapsed_time = time.process_time() - t
+        mean_dice_per_class = self.final_train_valid_per_class(self.hist_class_dice)
+        mean_iou_per_class = self.final_train_valid_per_class(self.hist_class_iou)
 
         print(f"loss : {epoch_loss} \ndice : {epoch_dice}\nIoU : {epoch_iou}")
-        print(f"epoch time : {elapsed_time:.2f} sec\n")       
+        print(f"epoch time : {elapsed_time:.2f} sec")       
+        print(f"Dice per class : {mean_dice_per_class}")
+        print(f"IoU per class : {mean_iou_per_class}\n")
         
         self.losses[phase].append(epoch_loss)
         self.dice_scores[phase].append(epoch_dice)
