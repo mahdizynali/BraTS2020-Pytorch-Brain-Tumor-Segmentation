@@ -1,9 +1,10 @@
 from config import *
-from dataGenerator import extractPath, generator
+from dataGenerator import generator
 from model import *
 from coefficent import *
-from train import Trainer
+from train import Trainer, data_loader
 from model import Modified3DUNet
+from plotter import plot
 
 model = Modified3DUNet()
 sum([param.nelement() for param in model.parameters()])
@@ -26,3 +27,10 @@ pred.dice_scores["train"] = train_logs.loc[:, "train_dice"].to_list()
 pred.dice_scores["val"] = train_logs.loc[:, "val_dice"].to_list()
 pred.jaccard_scores["train"] = train_logs.loc[:, "train_jaccard"].to_list()
 pred.jaccard_scores["val"] = train_logs.loc[:, "val_jaccard"].to_list()
+
+
+val_dataloader = data_loader(dataset=generator, path_to_csv=configuration.train_csv_path, phase='valid', fold=0)
+model.eval()
+dice_scores_per_classes, iou_scores_per_classes = compute_scores_per_classes(model, val_dataloader, ['WT', 'TC', 'ET'])
+
+plot(dice_scores_per_classes, iou_scores_per_classes)

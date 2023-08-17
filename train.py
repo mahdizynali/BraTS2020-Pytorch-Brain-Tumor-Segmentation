@@ -81,9 +81,10 @@ class Trainer:
         running_loss = 0.0
         self.optimizer.zero_grad()
         counter = 0
-        # for itr, data_batch in enumerate(dataloader):
-        for itr, data_batch in tqdm(enumerate(dataloader), total=len(dataloader), desc="Steps"):    
-            counter += 1
+        
+        for itr, data_batch in tqdm(enumerate(dataloader), total=len(dataloader), desc="Steps"):   
+            dice_per_classes, iou_per_classes = compute_scores_per_classes_batch(self.net, data_batch, ['WT', 'TC', 'ET']) 
+            print(dice_per_classes,"\n", iou_per_classes)
             images, targets = data_batch['image'], data_batch['mask']
             loss, logits = self.compute_loss_and_outputs(images, targets)
             loss = loss / self.accumulation_steps
@@ -100,7 +101,7 @@ class Trainer:
         elapsed_time = time.process_time() - t
 
         print(f"loss : {epoch_loss} \ndice : {epoch_dice}\nIoU : {epoch_iou}")
-        print(f"epoch time : {elapsed_time:.2f} sec\n")
+        print(f"epoch time : {elapsed_time:.2f} sec\n")       
         
         self.losses[phase].append(epoch_loss)
         self.dice_scores[phase].append(epoch_dice)
@@ -154,7 +155,7 @@ class Trainer:
             
     def load_predtrain_model(self, state_path: str):
         self.net.load_state_dict(torch.load(state_path))
-        print("Predtrain model loaded")
+        print("Predtrained model loaded\n")
         
     def save_train_history(self):
         torch.save(self.net.state_dict(),
@@ -171,33 +172,9 @@ class Trainer:
         pd.DataFrame(
             dict(zip(log_names, logs))).to_csv("trainResult/train_log.csv", index=False)
         
-
-
-# data = next(iter(dataloader))
-# data['Id'], data['image'].shape, data['mask'].shape
-# mask_tensor = data['mask'].squeeze()[0].squeeze().cpu().detach().numpy()
-# print("Num Mask values:", np.unique(mask_tensor, return_counts=True))
-
-
-#nodel = UNet3d(in_channels=4, n_classes=3, n_channels=24).to('cuda')
-#nodel = UNet3d2(in_channels=4, n_classes=3, n_channels=24).to('cuda')
-#nodel =VNet(elu=True, in_channels=4, classes=3)
-#nodel=ResUNet3d(4, 3, n_channels=24)
-#nodel=SkipDenseNet3D( in_channels=4, classes=3, growth_rate=16, block_config=(4, 4, 4, 4), num_init_features=32, drop_rate=0.1, bn_size=4)
-#nodel=deeper_resunet_3d(n_classes=3, base_filters=4, channel_in=4)
-nodel=Modified3DUNet()
-#nodel=DUnet(in_channels=4)
-#nodel=ESPNet(classes=3, channels=4)
-#nodel=GLIANet(in_channels=4, out_channels=3)
-#nodel=VoxResNet()
-#nodel=Model()
-#nodel=PFSeg3D()
-#nodel=DenseVNet()
-# print(nodel)
-sum([param.nelement() for param in nodel.parameters()])
-
 def run() :
-
+    nodel=Modified3DUNet()
+    sum([param.nelement() for param in nodel.parameters()])
     trainer = Trainer(net=nodel,
                     fold=0,
                     dataset=generator,
@@ -208,3 +185,5 @@ def run() :
                     num_epochs = configuration.epochs,
                     path_to_csv = configuration.train_csv_path)
     trainer.setup()
+
+run()

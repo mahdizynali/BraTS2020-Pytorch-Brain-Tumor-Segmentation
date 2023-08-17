@@ -248,3 +248,56 @@ def jaccard_coef_metric_per_classes(probabilities: np.ndarray,
                 scores[classes[class_]].append((intersection + eps) / union)
 
     return scores
+
+
+def compute_scores_per_classes(model, dataloader, classes):
+
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    dice_scores_per_classes = {key: list() for key in classes}
+    iou_scores_per_classes = {key: list() for key in classes}
+
+    with torch.no_grad():
+        for i, data in enumerate(dataloader):
+            imgs, targets = data['image'], data['mask']
+            imgs, targets = imgs.to(device), targets.to(device)
+            logits = model(imgs)
+            logits = logits.detach().cpu().numpy()
+            targets = targets.detach().cpu().numpy()
+            
+            dice_scores = dice_coef_metric_per_classes(logits, targets)
+            iou_scores = jaccard_coef_metric_per_classes(logits, targets)
+
+            for key in dice_scores.keys():
+                dice_scores_per_classes[key].extend(dice_scores[key])
+
+            for key in iou_scores.keys():
+                iou_scores_per_classes[key].extend(iou_scores[key])
+
+    return dice_scores_per_classes, iou_scores_per_classes
+
+
+def compute_scores_per_classes_batch(model, data, classes):
+
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    dice_scores_per_classes = {key: list() for key in classes}
+    iou_scores_per_classes = {key: list() for key in classes}
+
+    with torch.no_grad():
+        imgs, targets = data['image'], data['mask']
+        imgs, targets = imgs.to(device), targets.to(device)
+        logits = model(imgs)
+        logits = logits.detach().cpu().numpy()
+        targets = targets.detach().cpu().numpy()
+        
+        dice_scores = dice_coef_metric_per_classes(logits, targets)
+        iou_scores = jaccard_coef_metric_per_classes(logits, targets)
+
+        for key in dice_scores.keys():
+            mn = sum(dice_scores[key]) / len(dice_scores[key])
+            dice_scores_per_classes[key].append(mn)
+
+        for key in iou_scores.keys():
+            mn = sum(iou_scores[key]) / len(iou_scores[key])
+            iou_scores_per_classes[key].append(mn)
+
+    return dice_scores_per_classes, iou_scores_per_classes
