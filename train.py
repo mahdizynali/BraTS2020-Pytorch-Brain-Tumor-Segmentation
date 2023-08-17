@@ -42,6 +42,7 @@ class Trainer:
         self.accumulation_steps = accumulation_steps // batch_size
         self.phases = ["train", "valid"]
         self.num_epochs = num_epochs
+        print(f"Total epochs number : {num_epochs}\n")
         self.hist_train_dice = []
         self.hist_train_iou = []
         self.train_list_dice = []

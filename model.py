@@ -21,7 +21,7 @@ class bestUnet(nn.Module):
 		self.in_channels = in_channels
 		self.n_classes = n_classes
 		self.base_n_filter = base_n_filter
-		self.attention_block = AttentionBlock(self.base_n_filter * 8) # simple attention
+		# self.attention_block = AttentionBlock(self.base_n_filter * 8) # simple attention
   
 		# to be use in forward
 		self.lrelu = nn.LeakyReLU()
@@ -190,8 +190,6 @@ class bestUnet(nn.Module):
 		ds3 = out
 		out = self.conv3d_l3(out)
 		out = self.norm_lrelu_upscale_conv_norm_lrelu_l3(out)
-  
-		out = self.attention_block(out)
 
 		# Level 4 localization pathway
 		out = torch.cat([out, context_1], dim=1) # skip connection corresponding
@@ -205,7 +203,7 @@ class bestUnet(nn.Module):
 		ds1_ds2_sum_upscale_ds3_sum_upscale = self.upsacle(ds1_ds2_sum_upscale_ds3_sum)
 
 		out = out_pred + ds1_ds2_sum_upscale_ds3_sum_upscale
-		out = self.attention_block(out)
+		# out = self.attention_block(out)
 		return out
 
 
