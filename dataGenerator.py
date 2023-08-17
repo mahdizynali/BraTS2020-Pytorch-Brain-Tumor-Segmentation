@@ -73,7 +73,7 @@ class extractPath:
 
 class generator(Dataset):
     def __init__(self, df: pd.DataFrame, phase: str="test"):
-        print("Generating and Set augmentation on data done !!\n")
+        # print("Generating and Set augmentation on data done !!\n")
         self.df = df # calea
         self.phase = phase
         self.data_types = ['_flair.nii', '_t1.nii', '_t1ce.nii', '_t2.nii'] 

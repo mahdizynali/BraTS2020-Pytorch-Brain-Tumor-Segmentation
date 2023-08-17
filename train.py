@@ -7,7 +7,7 @@ data = extractPath()
 train_df, val_df, test_df = data.train_test_valid()
 # data.plotResult(train_df, val_df, test_df)
 
-def get_dataloader(dataset: torch.utils.data.Dataset,
+def data_loader(dataset: torch.utils.data.Dataset,
                    path_to_csv, phase, fold=0,
                    batch_size=configuration.batch_size,
                    num_workers=configuration.num_workers):
@@ -21,14 +21,14 @@ def get_dataloader(dataset: torch.utils.data.Dataset,
     dataset = dataset(df, phase)
     dataloader = DataLoader(
         dataset,
-        batch_size=batch_size,
-        num_workers=num_workers,
+        batch_size=configuration.batch_size,
+        num_workers=configuration.num_workers,
         pin_memory=True,
         shuffle=False,   
     )
     return dataloader
 
-dataloader = get_dataloader(dataset=generator, path_to_csv=configuration.train_csv_path, phase='valid', fold=0)
+dataloader = data_loader(dataset=generator, path_to_csv=configuration.train_csv_path, phase='valid', fold=0)
 
 
 
@@ -46,9 +46,8 @@ class Trainer:
                  display_plot: bool = True,
                 ):
 
-    
+        print("Try to start processing ...\n")
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        print("device:", self.device)
         self.display_plot = display_plot
         self.net = net
         self.net = self.net.to(self.device)
@@ -61,13 +60,13 @@ class Trainer:
         self.num_epochs = num_epochs
 
         self.dataloaders = {
-            phase: get_dataloader(
+            phase: data_loader(
                 dataset = dataset,
                 path_to_csv = path_to_csv,
                 phase = phase,
                 fold = fold,
                 batch_size = batch_size,
-                num_workers = 4
+                num_workers = configuration.num_workers
             )
             for phase in self.phases
         }
@@ -89,7 +88,7 @@ class Trainer:
         return loss, logits
 
     def _do_epoch(self, epoch: int, phase: str):
-        print(f"{phase} epoch: {epoch} | time: {time.strftime('%H:%M:%S')}")
+        print(f"########## {phase} epoch number {epoch + 1} ##########")
 
         self.net.train() if phase == "train" else self.net.eval()
         meter = Meter()
@@ -97,7 +96,10 @@ class Trainer:
         total_batches = len(dataloader)
         running_loss = 0.0
         self.optimizer.zero_grad()
+        counter = 0
         for itr, data_batch in enumerate(dataloader):
+            print(f"epoch: {epoch + 1} | step: {counter} | time: {time.strftime('%H:%M:%S')}")
+            counter += 1
             images, targets = data_batch['image'], data_batch['mask']
             loss, logits = self._compute_loss_and_outputs(images, targets)
             loss = loss / self.accumulation_steps
@@ -131,7 +133,7 @@ class Trainer:
                 self._plot_train_history()
                 
             if val_loss < self.best_loss:
-                print(f"\n{'#'*20}\nSaved new checkpoint\n{'#'*20}\n")
+                print(f"\n{'#'*40}\nSaved checkpoint epoch {epoch + 1}\n{'#'*40}\n")
                 self.best_loss = val_loss
                 torch.save(self.net.state_dict(), "trainResult/best_model.pth")
             print()
@@ -216,7 +218,7 @@ train = Trainer(net=nodel,
                   dataset=generator,
                   criterion=BCEDiceLoss(),
                   lr=configuration.learnin_rate,
-                  accumulation_steps=configuration.acc_step,
+                  accumulation_steps=configuration.acc_steps,
                   batch_size = configuration.batch_size,
                   num_epochs = configuration.epochs,
                   path_to_csv = configuration.train_csv_path,)
