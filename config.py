@@ -48,7 +48,7 @@ warnings.simplefilter("ignore")
 
 class configuration:
     '''in this case we devide trainingData into valid set and train set and test set,
-     also the ValidationData considers as test set for model evaluation'''
+     also the ValidationData considers as test data after training'''
 
     train_path = '/home/maximum/Desktop/tf2/dataSet/MICCAI_BraTS2020_TrainingData'
     test_path = '/home/maximum/Desktop/tf2/dataSet/MICCAI_BraTS2020_ValidationData'
@@ -60,6 +60,7 @@ class configuration:
     epochs = 30
     learnin_rate = 5e-4
     num_workers = 4
+    acc_steps = 4
     
 def random_seed(seed: int):
     '''set random seed for initializing'''

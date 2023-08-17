@@ -121,7 +121,7 @@ class Trainer:
         self.spf_scores[phase].append(epoch_spf)
         return epoch_loss
         
-    def run(self):
+    def setup(self):
         for epoch in range(self.num_epochs):
             self._do_epoch(epoch, "train")
             with torch.no_grad():
@@ -211,14 +211,14 @@ sum([param.nelement() for param in nodel.parameters()])
 
 
 
-trainer = Trainer(net=nodel,
+train = Trainer(net=nodel,
                   fold=0,
                   dataset=generator,
                   criterion=BCEDiceLoss(),
                   lr=configuration.learnin_rate,
-                  accumulation_steps=4,
+                  accumulation_steps=configuration.acc_step,
                   batch_size = configuration.batch_size,
                   num_epochs = configuration.epochs,
                   path_to_csv = configuration.train_csv_path,)
 
-trainer.run()
+train.setup()
