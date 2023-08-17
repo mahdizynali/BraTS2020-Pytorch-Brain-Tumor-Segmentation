@@ -33,18 +33,8 @@ dataloader = data_loader(dataset=generator, path_to_csv=configuration.train_csv_
 
 
 class Trainer:
-    def __init__(self,
-                 net: nn.Module,
-                 dataset: torch.utils.data.Dataset,
-                 criterion: nn.Module,
-                 lr: float,
-                 accumulation_steps: int,
-                 batch_size: int,
-                 fold: int,
-                 num_epochs: int,
-                 path_to_csv: str,
-                 display_plot: bool = True,
-                ):
+    def __init__(self, net: nn.Module, dataset: torch.utils.data.Dataset, criterion: nn.Module,
+                 lr, accumulation_steps, batch_size, fold, num_epochs, path_to_csv, display_plot = True):
 
         print("Try to start processing ...\n")
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -221,6 +211,6 @@ train = Trainer(net=nodel,
                   accumulation_steps=configuration.acc_steps,
                   batch_size = configuration.batch_size,
                   num_epochs = configuration.epochs,
-                  path_to_csv = configuration.train_csv_path,)
+                  path_to_csv = configuration.train_csv_path)
 
 train.setup()
