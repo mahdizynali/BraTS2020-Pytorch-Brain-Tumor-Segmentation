@@ -78,7 +78,9 @@ class Trainer:
         return loss, logits
 
     def _do_epoch(self, epoch: int, phase: str):
-        print(f"########## {phase} epoch number {epoch + 1} ##########")
+        print("#"*50)
+        t = time.process_time()
+        print(f"---------- {phase} initial mode epoch {epoch + 1} ----------\n")
 
         self.net.train() if phase == "train" else self.net.eval()
         meter = Meter()
@@ -87,8 +89,8 @@ class Trainer:
         running_loss = 0.0
         self.optimizer.zero_grad()
         counter = 0
-        for itr, data_batch in enumerate(dataloader):
-            print(f"epoch: {epoch + 1} | step: {counter} | time: {time.strftime('%H:%M:%S')}")
+        # for itr, data_batch in enumerate(dataloader):
+        for itr, data_batch in tqdm(enumerate(dataloader), total=len(dataloader), desc="Steps"):    
             counter += 1
             images, targets = data_batch['image'], data_batch['mask']
             loss, logits = self._compute_loss_and_outputs(images, targets)
@@ -105,6 +107,10 @@ class Trainer:
             
         epoch_loss = (running_loss * self.accumulation_steps) / total_batches
         epoch_dice, epoch_iou, epoch_sen, epoch_spf  = meter.get_metrics()
+        elapsed_time = time.process_time() - t
+
+        print(f"loss : {epoch_loss} \ndice : {epoch_dice}")
+        print(f"epoch time : {elapsed_time:.2f} sec\n")
         
         self.losses[phase].append(epoch_loss)
         self.dice_scores[phase].append(epoch_dice)
@@ -112,22 +118,6 @@ class Trainer:
         self.sen_scores[phase].append(epoch_sen)
         self.spf_scores[phase].append(epoch_spf)
         return epoch_loss
-        
-    def setup(self):
-        for epoch in range(self.num_epochs):
-            self._do_epoch(epoch, "train")
-            with torch.no_grad():
-                val_loss = self._do_epoch(epoch, "val")
-                self.scheduler.step(val_loss)
-            if self.display_plot:
-                self._plot_train_history()
-                
-            if val_loss < self.best_loss:
-                print(f"\n{'#'*40}\nSaved checkpoint epoch {epoch + 1}\n{'#'*40}\n")
-                self.best_loss = val_loss
-                torch.save(self.net.state_dict(), "trainResult/best_model.pth")
-            print()
-        self._save_train_history()
             
     def _plot_train_history(self):
         data = [self.losses, self.dice_scores]
@@ -155,6 +145,22 @@ class Trainer:
                 
             plt.tight_layout()
             # plt.show()
+
+    def setup(self):
+        for epoch in range(self.num_epochs):
+            self._do_epoch(epoch, "train")
+            with torch.no_grad():
+                val_loss = self._do_epoch(epoch, "val")
+                self.scheduler.step(val_loss)
+            if self.display_plot:
+                self._plot_train_history()
+                
+            if val_loss < self.best_loss:
+                print(f"\nSaved checkpoint epoch {epoch + 1}\n{'#'*50}\n")
+                self.best_loss = val_loss
+                torch.save(self.net.state_dict(), "trainResult/best_model.pth")
+            print()
+        self._save_train_history()
             
     def load_predtrain_model(self,
                              state_path: str):
