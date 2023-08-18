@@ -5,7 +5,6 @@ from coefficent import *
 
 data = extractPath()
 train_df, val_df, test_df = data.train_test_valid()
-# data.plotResult(train_df, val_df, test_df)
 
 def data_loader(dataset: torch.utils.data.Dataset,path_to_csv, phase, fold=0):
 
@@ -18,7 +17,7 @@ def data_loader(dataset: torch.utils.data.Dataset,path_to_csv, phase, fold=0):
     dataset = dataset(df, phase)
     dataloader = DataLoader(
         dataset,
-        batch_size=configuration.batch_size,
+        batch_size=4,
         num_workers=configuration.num_workers,
         pin_memory=True,
         shuffle=False,   
@@ -42,7 +41,7 @@ class Trainer:
         self.accumulation_steps = accumulation_steps // batch_size
         self.phases = ["train", "valid"]
         self.num_epochs = num_epochs
-        print(f"Total epochs number : {num_epochs}\n")
+        # print(f"Total epochs number : {num_epochs}\n")
         self.hist_train_dice = []
         self.hist_train_iou = []
         self.train_list_dice = []
@@ -264,4 +263,4 @@ def run() :
                     path_to_csv = configuration.train_csv_path)
     trainer.setup()
 
-run()
+# run()

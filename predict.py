@@ -34,6 +34,65 @@ model.eval()
 dice_scores_per_classes, iou_scores_per_classes = compute_scores_per_classes(model, val_dataloader, ['WT', 'TC', 'ET'])
 
 # test_on_dataset(dice_scores_per_classes, iou_scores_per_classes)
-# plot_train_history()
-# plot_dice_history_per_class()
-# plot_iou_history_per_class()
+plot_train_history()
+plot_dice_history_per_class()
+plot_iou_history_per_class()
+
+
+# def compute_results(model, dataloader, treshold=0.50):
+
+#     device = 'cuda' if torch.cuda.is_available() else 'cpu'
+#     results = {"Id": [],"image": [], "GT": [],"Prediction": []}
+
+#     with torch.no_grad():
+#         for i, data in enumerate(dataloader):
+#             id_, imgs, targets = data['Id'], data['image'], data['mask']
+#             imgs, targets = imgs.to(device), targets.to(device)
+#             logits = model(imgs)
+#             probs = torch.sigmoid(logits)
+            
+#             predictions = (probs >= treshold).float()
+#             predictions =  predictions.cpu()
+#             targets = targets.cpu()
+            
+#             results["Id"].append(id_)
+#             results["image"].append(imgs.cpu())
+#             results["GT"].append(targets)
+#             results["Prediction"].append(predictions)
+            
+#             # only 5 pars
+#             if (i > 20):    
+#                 return results
+#             print(results['Id'])
+#         return results
+
+# results = compute_results(model, val_dataloader, 0.40)
+# for id_, img, gt, prediction in zip(results['Id'], results['image'], results['GT'], results['Prediction']):
+#     print(id_)
+# show_result = ShowResult()
+# show_result.plot(img, gt, prediction)
+
+
+
+
+
+
+# device =  'cpu'
+# with torch.no_grad():
+#     images = data['image'][tio.DATA].to(device)
+#     targets = data['label'][tio.DATA].to(device)
+#     predict = model(images)
+#     img_tensor = data['image'][tio.DATA].squeeze()[1].cpu().detach().numpy() 
+#     mask_tensor = data['label'][tio.DATA].squeeze()[0].squeeze().cpu().detach().numpy()
+#     predict_tensor = predict.squeeze()[0].squeeze().cpu().detach().numpy()
+#     image = np.rot90(montage(img_tensor))
+#     mask_predict = np.rot90(montage(predict_tensor))
+#     mask = np.rot90(montage(mask_tensor)) 
+#     fig, (ax1, ax2) = plt.subplots(1, 2, figsize = (20, 20))
+#     ax1.imshow(image, cmap = 'gray')
+#     ax1.imshow(np.ma.masked_where(mask == False, mask),
+#     cmap='cool', alpha=0.6)
+#     ax2.imshow(image, cmap ='gray')
+#     ax2.imshow(np.ma.masked_where(mask == False, mask_predict),
+#     cmap='cool', alpha=0.6)
+
