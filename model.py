@@ -7,11 +7,11 @@ class AttentionBlock(nn.Module):
         self.conv2 = nn.Conv3d(in_channels // 2, 1, kernel_size=1)
         self.sigmoid = nn.Sigmoid()
 
-    def forward(self, input_map):
-        context = self.conv1(input_map)
+    def forward(self, x):
+        context = self.conv1(x)
         context = self.conv2(context)
         attention_weights = self.sigmoid(context)
-        out = attention_weights * input_map
+        out = attention_weights * x
         return out
 
 class bestUnet(nn.Module):
