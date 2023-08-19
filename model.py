@@ -14,6 +14,8 @@ class AttentionBlock(nn.Module):
         out = attention_weights * x
         return out
 
+
+
 class bestUnet(nn.Module):
 	def __init__(self, in_channels=4, n_classes=3, base_n_filter = 8):
 		super(bestUnet, self).__init__()
@@ -21,9 +23,12 @@ class bestUnet(nn.Module):
 		self.in_channels = in_channels
 		self.n_classes = n_classes
 		self.base_n_filter = base_n_filter
-		# self.attention_block = AttentionBlock(self.base_n_filter * 8) # simple attention
   
 		# to be use in forward
+		self.att1= AttentionBlock(self.base_n_filter * 16)
+		self.att2= AttentionBlock(self.base_n_filter * 8)
+		self.att3= AttentionBlock(self.base_n_filter * 4)
+		self.att4= AttentionBlock(self.base_n_filter * 2)
 		self.lrelu = nn.LeakyReLU()
 		self.dropout3d = nn.Dropout3d(p=0.6)
 		self.upsacle = nn.Upsample(scale_factor=2, mode='nearest')
@@ -119,7 +124,6 @@ class bestUnet(nn.Module):
 		out = self.conv3d_c1_2(out)
 		out = self.dropout3d(out)
 		out = self.lrelu_conv_c1(out)
-		# Element Wise Summation
 		out += residual_1
 		context_1 = self.lrelu(out)
 		out = self.inorm3d_c1(out)
@@ -174,12 +178,14 @@ class bestUnet(nn.Module):
 		# Level 1 localization pathway
 		out = torch.cat([out, context_4], dim=1) # skip connection corresponding
 		out = self.conv_norm_lrelu_l1(out)
+		out = self.att1(out)
 		out = self.conv3d_l1(out)
 		out = self.norm_lrelu_upscale_conv_norm_lrelu_l1(out)
 
 		# Level 2 localization pathway
 		out = torch.cat([out, context_3], dim=1) # skip connection corresponding
 		out = self.conv_norm_lrelu_l2(out)
+		out = self.att2(out)
 		ds2 = out
 		out = self.conv3d_l2(out)
 		out = self.norm_lrelu_upscale_conv_norm_lrelu_l2(out)
@@ -187,13 +193,16 @@ class bestUnet(nn.Module):
 		# Level 3 localization pathway
 		out = torch.cat([out, context_2], dim=1) # skip connection corresponding
 		out = self.conv_norm_lrelu_l3(out)
+		out = self.att3(out)
 		ds3 = out
 		out = self.conv3d_l3(out)
 		out = self.norm_lrelu_upscale_conv_norm_lrelu_l3(out)
+		
 
 		# Level 4 localization pathway
 		out = torch.cat([out, context_1], dim=1) # skip connection corresponding
 		out = self.conv_norm_lrelu_l4(out)
+		out = self.att4(out)
 		out_pred = self.conv3d_l4(out)
 
 		ds2_1x1_conv = self.ds2_1x1_conv3d(ds2)
@@ -203,7 +212,6 @@ class bestUnet(nn.Module):
 		ds1_ds2_sum_upscale_ds3_sum_upscale = self.upsacle(ds1_ds2_sum_upscale_ds3_sum)
 
 		out = out_pred + ds1_ds2_sum_upscale_ds3_sum_upscale
-		# out = self.attention_block(out)
 		return out
 
 
