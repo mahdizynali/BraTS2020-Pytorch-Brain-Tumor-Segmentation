@@ -1,50 +1,8 @@
-import os
-import time
-from random import randint
-
-import numpy as np
-from scipy import stats
-import pandas as pd
-
-from sklearn.model_selection import train_test_split
-from sklearn.model_selection import StratifiedKFold
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import KFold
-
-import nibabel as nib
-import nilearn as nl
-import nilearn.plotting as nlplt
-
-import matplotlib.pyplot as plt
-from matplotlib import cm
-import matplotlib.animation as anim
-import matplotlib.patches as mpatches
-import matplotlib.gridspec as gridspec
-
-from IPython.display import Image as show_gif
-
-import seaborn as sns
-import imageio
-from skimage.transform import resize
-from skimage.util import montage
-from skimage.transform import rotate
-from tqdm import tqdm
 import torch
-import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
-import torch.nn.functional as F
-
-from torch.optim import Adam
-from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torch.nn import MSELoss
-
-import albumentations as A
-from albumentations.pytorch import ToTensorV2 
-from albumentations import HorizontalFlip, VerticalFlip, Normalize, Compose
+import numpy as np
 
 import warnings
 warnings.simplefilter("ignore")
-
 
 class configuration:
     '''in this case we devide trainingData into valid set and train set and test set,
@@ -53,17 +11,17 @@ class configuration:
     train_path = '/media/mahdi/individual/dataset/MICCAI_BraTS2020_TrainingData'
     test_path = '/media/mahdi/individual/dataset/MICCAI_BraTS2020_ValidationData'
     train_csv_path = 'trainResult/train_data.csv'
-    dice_per_class_path = 'trainResult/dice_per_class.csv'
+    train_log = 'trainResult/train_log.csv'
+    dice_per_class_path = 'trainResult/dice_perـclass.csv'
     iou_per_class_path = 'trainResult/iou_per_class.csv'
-    pretrained_model_path = "/home/mahdi/Desktop/BraTS2020-Pytorch-Brain-Tumor-Segmentation/pre/best_model.pth"
-    train_logs_path = "/home/mahdi/Desktop/BraTS2020-Pytorch-Brain-Tumor-Segmentation/pre/train_log.csv"
+    pretrained_model_path = "trainResult/best_model.pth"
+    train_logs_path = "trainResult/train_log.csv"
     seed = 55
     batch_size = 4
-    epochs = 2
+    epochs = 1
     learnin_rate = 5e-4
     num_workers = 4
     acc_steps = 4
-    
     
 def random_seed(seed: int):
     '''set random seed for initializing'''
