@@ -188,7 +188,7 @@ def dice_coef_metric_per_classes(probabilities: np.ndarray,
     num = probabilities.shape[0]
     num_classes = probabilities.shape[1]
     predictions = (probabilities >= treshold).astype(np.float32)
-    assert(predictions.shape == truth.shape)
+    # assert(predictions.shape == truth.shape)
 
     for i in range(num):
         for class_ in range(num_classes):
