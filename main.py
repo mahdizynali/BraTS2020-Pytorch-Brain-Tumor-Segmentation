@@ -195,7 +195,7 @@ class Trainer:
                 'Epoch': epoch + 1,
                 'Mean_Hausdorff': self.hist_hausdorff
             })
-            hausdorff_df.to_csv('hausdorff.csv', index=False)
+            hausdorff_df.to_csv(configuration.hausdorff_path, index=False)
 
         print(f"loss : {epoch_loss} \ndice : {epoch_dice}\nIoU : {epoch_iou}")
         print(f"epoch time : {elapsed_time:.2f} sec")       
@@ -279,8 +279,8 @@ def get_coordinates(mask):
 def compute_results(model, dataloader, treshold=0.50):
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    results = {"Id": [], "image": [], "GT": [], "Prediction": [], "Hausdorff_95": []}
-    test = []
+    results = {"Id": [], "image": [], "GT": [], "Prediction": []}
+
     with torch.no_grad():
         for i, data in enumerate(dataloader):
             id_, imgs, targets = data['Id'], data['image'], data['mask']
@@ -292,32 +292,15 @@ def compute_results(model, dataloader, treshold=0.50):
             predictions = predictions.cpu()
             targets = targets.cpu()
 
-            # hausdorff_distances = []
-
-            for pred_mask, gt_mask in zip(predictions, targets):
-            #     pred_coords = get_coordinates(pred_mask)
-            #     gt_coords = get_coordinates(gt_mask)
-            #     distance = max(directed_hausdorff(pred_coords, gt_coords)[0],
-            #                     directed_hausdorff(gt_coords, pred_coords)[0])
-            #     hausdorff_distances.append(distance)
-
-            # # Calculate Hausdorff 95%
-            
-            # hausdorff_95 = np.percentile(hausdorff_distances, 95)
-            # test.append(hausdorff_95)
-                hh = metric.hd95(pred_mask.cpu().numpy().astype(bool), gt_mask.cpu().numpy().astype(bool))
-                print(hh)
-
             results["Id"].append(id_)
             results["image"].append(imgs.cpu())
             results["GT"].append(targets)
             results["Prediction"].append(predictions)
-            # results["Hausdorff_95"].append(hausdorff_95)
 
             # only 5 pars
             if (i > 10):
                 return results
-    # print(sum(test) / len(test))
+
     return results
 
         
@@ -357,11 +340,11 @@ def configModel(phase, model) :
         # plot_iou_history_per_class(configuration.iou_per_class_path)
 
         results = compute_results(model, val_dataloader, 0.50)
-        # i = 1
-        # for id_, img, gt, prediction in zip(results['Id'], results['image'], results['GT'], results['Prediction']):
-        #     show_result = ShowResult()
-        #     show_result.plot(img, gt, prediction, i)
-        #     i+=1
+        i = 1
+        for id_, img, gt, prediction in zip(results['Id'], results['image'], results['GT'], results['Prediction']):
+            show_result = ShowResult()
+            show_result.plot(img, gt, prediction, i)
+            i+=1
 
 def main():
     model=bestUnet()
