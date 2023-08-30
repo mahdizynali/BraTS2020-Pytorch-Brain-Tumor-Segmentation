@@ -33,7 +33,7 @@ class bestUnet(nn.Module):
 		self.lrelu = nn.LeakyReLU()
 		self.dropout3d = nn.Dropout3d(p=0.6)
 		self.upsacle = nn.Upsample(scale_factor=2, mode='nearest')
-		# self.softmax = nn.Softmax(dim=1)
+		self.softmax = nn.Softmax(dim=1)
 
 		# Level 1 context pathway
 		self.conv3d_c1_1 = nn.Conv3d(self.in_channels, self.base_n_filter, kernel_size=3, stride=1, padding=1, bias=False)
@@ -63,31 +63,31 @@ class bestUnet(nn.Module):
         # upscaling
 		self.norm_lrelu_upscale_conv_norm_lrelu_l0 = self.norm_lrelu_upscale_conv_norm_lrelu(self.base_n_filter*16, self.base_n_filter*8) # 64
 
-		self.conv3d_l0 = nn.Conv3d(self.base_n_filter*8, self.base_n_filter*8, kernel_size = 1, stride=1, padding=0, bias=False)
+		self.conv3d_l0 = nn.Conv3d(self.base_n_filter*8, self.base_n_filter*8, kernel_size = 3, stride=1, padding=1, bias=False)
 		self.inorm3d_l0 = nn.InstanceNorm3d(self.base_n_filter*8) # 64
 
 		# Level 1 localization pathway
 		self.conv_norm_lrelu_l1 = self.conv_norm_lrelu(self.base_n_filter*16, self.base_n_filter*16)
-		self.conv3d_l1 = nn.Conv3d(self.base_n_filter*16, self.base_n_filter*8, kernel_size=1, stride=1, padding=0, bias=False)
+		self.conv3d_l1 = nn.Conv3d(self.base_n_filter*16, self.base_n_filter*8, kernel_size=3, stride=1, padding=1, bias=False)
 		self.norm_lrelu_upscale_conv_norm_lrelu_l1 = self.norm_lrelu_upscale_conv_norm_lrelu(self.base_n_filter*8, self.base_n_filter*4)
 
 		# Level 2 localization pathway
 		self.conv_norm_lrelu_l2 = self.conv_norm_lrelu(self.base_n_filter*8, self.base_n_filter*8)
-		self.conv3d_l2 = nn.Conv3d(self.base_n_filter*8, self.base_n_filter*4, kernel_size=1, stride=1, padding=0, bias=False)
+		self.conv3d_l2 = nn.Conv3d(self.base_n_filter*8, self.base_n_filter*4, kernel_size=3, stride=1, padding=1, bias=False)
 		self.norm_lrelu_upscale_conv_norm_lrelu_l2 = self.norm_lrelu_upscale_conv_norm_lrelu(self.base_n_filter*4, self.base_n_filter*2)
 
 		# Level 3 localization pathway
 		self.conv_norm_lrelu_l3 = self.conv_norm_lrelu(self.base_n_filter*4, self.base_n_filter*4)
-		self.conv3d_l3 = nn.Conv3d(self.base_n_filter*4, self.base_n_filter*2, kernel_size=1, stride=1, padding=0, bias=False)
+		self.conv3d_l3 = nn.Conv3d(self.base_n_filter*4, self.base_n_filter*2, kernel_size=3, stride=1, padding=1, bias=False)
 		self.norm_lrelu_upscale_conv_norm_lrelu_l3 = self.norm_lrelu_upscale_conv_norm_lrelu(self.base_n_filter*2, self.base_n_filter)
 
 		# Level 4 localization pathway
 		self.conv_norm_lrelu_l4 = self.conv_norm_lrelu(self.base_n_filter*2, self.base_n_filter*2)
-		self.conv3d_l4 = nn.Conv3d(self.base_n_filter*2, self.n_classes, kernel_size=1, stride=1, padding=0, bias=False)
+		self.conv3d_l4 = nn.Conv3d(self.base_n_filter*2, self.n_classes, kernel_size=3, stride=1, padding=1, bias=False)
 
         # output layers
-		self.ds2_1x1_conv3d = nn.Conv3d(self.base_n_filter*8, self.n_classes, kernel_size=1, stride=1, padding=0, bias=False)
-		self.ds3_1x1_conv3d = nn.Conv3d(self.base_n_filter*4, self.n_classes, kernel_size=1, stride=1, padding=0, bias=False)
+		self.ds2_1x1_conv3d = nn.Conv3d(self.base_n_filter*8, self.n_classes, kernel_size=3, stride=1, padding=1, bias=False)
+		self.ds3_1x1_conv3d = nn.Conv3d(self.base_n_filter*4, self.n_classes, kernel_size=3, stride=1, padding=1, bias=False)
 
 
 	def conv_norm_lrelu(self, feat_in, feat_out):
@@ -204,7 +204,7 @@ class bestUnet(nn.Module):
 		out = self.conv_norm_lrelu_l4(out)
 		out = self.att4(out)
 		out_pred = self.conv3d_l4(out)
-		out_pred  = nn.functional.softmax(out_pred, dim=1)
+		out_pred  = self.softmax(out_pred)
 		out = scale_fusion (self, ds2, ds3, out_pred)
   
 		return out
