@@ -215,9 +215,9 @@ class ShowResult:
         return flair_img
     
     def plot(self, image, ground_truth, prediction, i):
-        image = self.image_preprocessing(image)
-        gt_mask_WT, gt_mask_TC, gt_mask_ET = self.mask_preprocessing(ground_truth)
-        pr_mask_WT, pr_mask_TC, pr_mask_ET = self.mask_preprocessing(prediction)
+        image = self.image_preprocessing(image[0])
+        gt_mask_WT, gt_mask_TC, gt_mask_ET = self.mask_preprocessing(ground_truth[0])
+        pr_mask_WT, pr_mask_TC, pr_mask_ET = self.mask_preprocessing(prediction[0])
         
         fig, axes = plt.subplots(1, 2, figsize=(18, 10))
         fig.set_facecolor('black')  # Set black background
